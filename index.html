@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Ardsan Co-operative — Login</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Firebase v8 (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="js/firebase-config.js"></script>
+</head>
+<body>
+  <div class="card auth-card">
+    <h1>Ardsan Co-operative</h1>
+
+    <div id="forms">
+      <div id="login-form">
+        <h3>Login</h3>
+        <input id="login-email" type="email" placeholder="Email" />
+        <input id="login-password" type="password" placeholder="Password" />
+        <button id="btn-login">Login</button>
+        <p>Don't have an account? <a href="#" id="show-signup">Create one</a></p>
+      </div>
+
+      <div id="signup-form" style="display:none">
+        <h3>Sign up</h3>
+        <input id="signup-name" type="text" placeholder="Full name" />
+        <input id="signup-email" type="email" placeholder="Email" />
+        <input id="signup-password" type="password" placeholder="Password" />
+        <button id="btn-signup">Sign up</button>
+        <p>Already have an account? <a href="#" id="show-login">Login</a></p>
+      </div>
+    </div>
+
+    <div id="status" class="muted"></div>
+  </div>
+
+<script>
+const adminEmails = [
+  'msanusi2009@yahoo.co.uk',
+  'Yakububilyaminu44@gmail.com',
+  'kabironifade@gmail.com'
+].map(e => e.toLowerCase());
+
+// UI toggles
+document.getElementById('show-signup').addEventListener('click', ()=> {
+  document.getElementById('login-form').style.display='none';
+  document.getElementById('signup-form').style.display='block';
+  document.getElementById('status').textContent='';
+});
+document.getElementById('show-login').addEventListener('click', ()=> {
+  document.getElementById('signup-form').style.display='none';
+  document.getElementById('login-form').style.display='block';
+  document.getElementById('status').textContent='';
+});
+
+// Signup
+document.getElementById('btn-signup').addEventListener('click', async () => {
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const pass = document.getElementById('signup-password').value;
+  if(!name || !email || !pass){ document.getElementById('status').textContent='Fill all fields'; return; }
+  document.getElementById('status').textContent='Creating account...';
+  try {
+    const res = await auth.createUserWithEmailAndPassword(email, pass);
+    const uid = res.user.uid;
+    await db.ref('users/'+uid).set({
+      name: name,
+      email: email,
+      balance: 0,
+      loanStatus: 'None',
+      commodity: 'None'
+    });
+    document.getElementById('status').textContent='Account created. Redirecting...';
+    // redirect to dashboard (dashboard will check admin email)
+    window.location = 'dashboard.html';
+  } catch(e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+});
+
+// Login
+document.getElementById('btn-login').addEventListener('click', async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  if(!email || !pass){ document.getElementById('status').textContent='Provide email & password'; return; }
+  document.getElementById('status').textContent='Signing in...';
+  try {
+    const res = await auth.signInWithEmailAndPassword(email, pass);
+    const userEmail = (res.user.email || '').toLowerCase();
+    // redirect
+    window.location = 'dashboard.html';
+  } catch(e) {
+    document.getElementById('status').textContent = 'Login error: ' + e.message;
+  }
+});
+</script>
+</body>
+</html>

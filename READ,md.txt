@@ -1,0 +1,22 @@
+# Ardsan-Cooperative-NASRDA (Light theme)
+
+Quick start:
+1. Put files into a folder `ardsan-cooperative-nasrda`.
+2. Edit js/firebase-config.js if you need to adjust appId.
+3. Run locally (use VS Code Live Server) to test pages:
+   - index.html (login/signup)
+   - dashboard.html (user)
+   - admin/index.html (admin login)
+   - admin/dashboard.html (admin panel)
+4. Admin accounts (allowed emails):
+   - msanusi2009@yahoo.co.uk
+   - Yakububilyaminu44@gmail.com
+   - kabironifade@gmail.com
+
+To deploy (Firebase Hosting):
+- Install Firebase CLI: `npm i -g firebase-tools`
+- Login: `firebase login`
+- Initialize hosting if you haven't: `firebase init` (choose Hosting and this project)
+- Deploy: `firebase deploy --only hosting`
+
+**Security note:** This repo contains only public web config; do NOT commit serviceAccountKey.json.

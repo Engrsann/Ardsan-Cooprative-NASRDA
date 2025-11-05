@@ -1,0 +1,55 @@
+/* css/style.css */
+body{
+  font-family: Arial, sans-serif;
+  background:#f4f7fb;
+  margin:0;
+  color:#1f2937;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 20px;
+  background: #fff;
+  border-bottom:1px solid #e6edf3;
+}
+
+.container{ max-width:1000px; margin:20px auto; padding:20px; }
+
+.card{
+  background:#fff;
+  border-radius:10px;
+  padding:16px;
+  box-shadow: 0 4px 14px rgba(20,30,50,0.06);
+  margin-bottom:16px;
+}
+
+.auth-card{
+  width:360px;
+  margin:80px auto;
+  text-align:left;
+}
+
+input, select, button{
+  display:block;
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:8px;
+  border:1px solid #d1e3f0;
+}
+
+button{
+  background:#2563eb;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+
+button:hover{ opacity:0.95; }
+
+.admin-table{ width:100%; border-collapse:collapse; }
+.admin-table th, .admin-table td{ border:1px solid #eef2f7; padding:8px; text-align:left; }
+.comm-item{ padding:8px 0; border-bottom:1px dashed #eef2f7; }
+.muted{ color:#6b7280; font-size:13px; margin-top:8px; }

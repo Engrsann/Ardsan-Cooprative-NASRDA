@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Ardsan — Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="js/firebase-config.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h2>Ardsan Cooperative — User Dashboard</h2>
+    <div>
+      <button id="btn-logout">Logout</button>
+      <button id="btn-admin-panel" style="display:none">Open Admin</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h3>Your Account</h3>
+      <p><strong>Name:</strong> <span id="name">—</span></p>
+      <p><strong>Email:</strong> <span id="email">—</span></p>
+      <p><strong>Balance:</strong> ₦<span id="balance">0</span></p>
+    </section>
+
+    <section class="card">
+      <h3>Your Loans</h3>
+      <table id="loans-table">
+        <thead><tr><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <h4>Request a Loan</h4>
+      <select id="loan-type">
+        <option>Emergency</option>
+        <option>Long-term</option>
+        <option>Business</option>
+      </select>
+      <input id="loan-amount" placeholder="Amount (NGN)" type="number"/>
+      <button id="btn-request-loan">Request Loan</button>
+    </section>
+
+    <section class="card">
+      <h3>Commodities</h3>
+      <div id="commodities"></div>
+    </section>
+  </main>
+
+<script>
+  // admin emails allowed (from you)
+  const ADMIN_EMAILS = [
+    'msanusi2009@yahoo.co.uk',
+    'Yakububilyaminu44@gmail.com',
+    'kabironifade@gmail.com'
+  ].map(e => e.toLowerCase());
+
+  document.getElementById('btn-logout').addEventListener('click', ()=> auth.signOut().then(()=> window.location='index.html'));
+
+  auth.onAuthStateChanged(async user => {
+    if(!user) { window.location = 'index.html'; return; }
+    const uid = user.uid;
+    const uSnap = await db.ref('users/' + uid).once('value');
+    const profile = uSnap.val() || {};
+    document.getElementById('name').textContent = profile.name || '';
+    document.getElementById('email').textContent = profile.email || user.email || '';
+    document.getElementById('balance').textContent = profile.balance || 0;
+
+    // show admin button only for admin emails
+    if(ADMIN_EMAILS.includes((user.email || '').toLowerCase())){
+      document.getElementById('btn-admin-panel').style.display='inline-block';
+      document.getElementById('btn-admin-panel').addEventListener('click', ()=> window.location = 'admin/index.html');
+    }
+
+    // load loans belonging to this user
+    const loansSnap = await db.ref('loans').orderByChild('userId').equalTo(uid).once('value');
+    const loansTbody = document.querySelector('#loans-table tbody');
+    loansTbody.innerHTML = '';
+    if(loansSnap.exists()){
+      loansSnap.forEach(child => {
+        const l = child.val();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${l.type}</td><td>₦${l.amount}</td><td>${l.status}</td>`;
+        loansTbody.appendChild(tr);
+      });
+    } else {
+      loansTbody.innerHTML = '<tr><td colspan="3">No loans</td></tr>';
+    }
+
+    // load commodities
+    const commSnap = await db.ref('commodities').once('value');
+    const cDiv = document.getElementById('commodities');
+    if(commSnap.exists()){
+      const comm = commSnap.val();
+      cDiv.innerHTML = Object.keys(comm).map(k=>{
+        const c = comm[k];
+        return `<div class="comm-item"><strong>${c.name}</strong> — ₦${c.price} — Stock: ${c.stock} <button onclick="collectCommodity('${k}')">Collect</button></div>`;
+      }).join('');
+    } else cDiv.innerHTML = 'No commodities yet';
+  });
+
+  document.getElementById('btn-request-loan').addEventListener('click', async ()=>{
+    const amt = Number(document.getElementById('loan-amount').value || 0);
+    const type = document.getElementById('loan-type').value;
+    const user = auth.currentUser;
+    if(!user){ alert('Not signed in'); return; }
+    if(amt <= 0){ alert('Enter amount'); return; }
+    const newRef = db.ref('loans').push();
+    await newRef.set({
+      userId: user.uid,
+      type: type,
+      amount: amt,
+      status: 'Pending',
+      createdAt: Date.now()
+    });
+    alert('Loan requested — status: Pending');
+    location.reload();
+  });
+
+  window.collectCommodity = async (commId) => {
+    const user = auth.currentUser;
+    if(!user) return alert('Not signed in');
+    const colRef = db.ref('collections').push();
+    await colRef.set({
+      userId: user.uid,
+      commodityId: commId,
+      status: 'Collected',
+      createdAt: Date.now()
+    });
+    alert('You have collected this commodity. Admin will update payment status.');
+  };
+</script>
+</body>
+</html>
